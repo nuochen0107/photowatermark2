@@ -1,16 +1,95 @@
-# React + Vite
+📸 Photowatermark2
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一个基于 React + Vite + Electron 的本地图片水印工具，支持 批量导入、文本水印、图片水印、导出设置 等功能。
 
-Currently, two official plugins are available:
+🚀 功能特性
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+ 文件导入
 
-## React Compiler
+支持单张图片拖拽或通过文件选择器导入
 
-The React Compiler is not enabled on this template. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+支持批量导入多个文件或整个文件夹
 
-## Expanding the ESLint configuration
+在界面上显示缩略图和文件名
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+ 格式支持
+
+输入：JPEG, PNG, BMP, TIFF（其中 PNG 支持透明通道）
+
+输出：JPEG 或 PNG，可调节 JPEG 压缩率
+
+ 水印类型
+
+文本水印：自定义内容、透明度、位置
+
+图片水印（可选）：支持透明 PNG，支持缩放和透明度调节
+
+ 布局与样式
+
+九宫格预设位置（四角+中心）
+
+手动拖拽水印位置
+
+实时预览效果
+
+ 配置管理
+
+保存水印模板（包括内容、字体、颜色、位置等）
+
+下次启动时自动加载上一次的配置
+
+🛠️ 环境要求
+
+Node.js ≥ 18
+
+npm ≥ 9
+
+📦 安装依赖
+npm install
+
+🖥️ 本地运行（开发模式）
+npm run dev
+
+
+然后在浏览器中打开：
+
+👉 http://localhost:5173
+
+📦 打包成桌面应用（Windows）
+
+项目使用 Electron，可以打包成可执行文件：
+
+npm run build
+
+
+打包结果会生成在 dist/ 目录下，可以在 Windows 上直接运行。
+
+📖 使用说明
+
+打开程序后，点击 导入图片 或直接拖拽图片/文件夹。
+
+在左侧看到缩略图列表，点击选择要预览的图片。
+
+在右侧编辑区：
+
+输入水印文字，调整透明度/位置/样式
+
+或者选择一张图片作为水印
+
+点击 导出，选择输出目录，文件将保存到 _watermark 子文件夹中。
+
+📝 开发计划
+
+ 完成基本 UI 结构（导入/导出/预览）
+
+ 实现文本水印功能
+
+ 实现图片水印功能
+
+ 实现模板保存和加载
+
+ 打包为 Windows 可执行文件
+
+📜 License
+
+MIT License.
