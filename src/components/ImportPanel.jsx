@@ -26,6 +26,11 @@ const ImportPanel = () => {
   }, [addImages]);
 
   const handleSelectFiles = async () => {
+    if (!ipcRenderer) {
+      message.warning('文件选择功能需要在Electron环境中使用');
+      return;
+    }
+    
     try {
       const filePaths = await ipcRenderer.invoke('select-files');
       if (filePaths && filePaths.length > 0) {
@@ -39,6 +44,11 @@ const ImportPanel = () => {
   };
 
   const handleSelectFolder = async () => {
+    if (!ipcRenderer) {
+      message.warning('文件夹选择功能需要在Electron环境中使用');
+      return;
+    }
+    
     try {
       const dirPath = await ipcRenderer.invoke('select-directory');
       if (dirPath) {

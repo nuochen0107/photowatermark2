@@ -4,7 +4,9 @@ import { DeleteOutlined } from '@ant-design/icons';
 import useImageStore from '../store/imageStore';
 
 const ImageList = () => {
-  const { images, removeImage, setSelectedImage, selectedImage, getThumbnail } = useImageStore();
+  const { images, removeImage, setSelectedImage, selectedImage, getThumbnail, isThumbnailLoading } = useImageStore();
+
+  console.log('ImageList render - images:', images.length); // 调试日志
 
   const handleImageClick = (image) => {
     setSelectedImage(image.id);
@@ -14,6 +16,14 @@ const ImageList = () => {
     e.stopPropagation();
     removeImage(id);
   };
+
+  if (images.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px', color: '#999' }}>
+        暂无图片，请导入图片文件
+      </div>
+    );
+  }
 
   return (
     <List
@@ -27,6 +37,10 @@ const ImageList = () => {
       dataSource={images}
       renderItem={(image) => {
         const thumbnail = getThumbnail(image.id);
+        const isLoading = isThumbnailLoading(image.id);
+        
+        console.log(`Image ${image.name} - thumbnail:`, !!thumbnail, 'loading:', isLoading); // 调试日志
+        
         return (
           <List.Item>
             <Card
