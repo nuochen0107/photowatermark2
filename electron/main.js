@@ -56,17 +56,33 @@ async function generatePreview(imagePath) {
       height = PREVIEW_MAX_SIZE
     }
 
-    const previewBuffer = await image
-      .resize(width, height, {
-        fit: 'contain',
-        background: { r: 255, g: 255, b: 255, alpha: 1 }
-      })
-      .flatten({ background: '#FFFFFF' })
-      .toFormat('jpeg', { 
-        quality: 90,
-        progressive: true
-      })
-      .toBuffer()
+    // 检查原图是否有透明通道
+    const hasAlpha = metadata.channels === 4 || metadata.hasAlpha
+
+    let previewBuffer
+    if (hasAlpha) {
+      // 保持PNG格式以保留透明度
+      previewBuffer = await image
+        .resize(width, height, {
+          fit: 'contain',
+          background: { r: 0, g: 0, b: 0, alpha: 0 } // 透明背景
+        })
+        .toFormat('png')
+        .toBuffer()
+    } else {
+      // 非透明图片使用JPEG格式
+      previewBuffer = await image
+        .resize(width, height, {
+          fit: 'contain',
+          background: { r: 255, g: 255, b: 255, alpha: 1 }
+        })
+        .flatten({ background: '#FFFFFF' })
+        .toFormat('jpeg', { 
+          quality: 90,
+          progressive: true
+        })
+        .toBuffer()
+    }
 
     return previewBuffer.toString('base64')
   } catch (error) {
@@ -129,6 +145,24 @@ function createWindow() {
       return preview
     } catch (error) {
       console.error('Error in generate-preview handler:', error)
+      throw error
+    }
+  })
+
+  // Handle image metadata retrieval
+  ipcMain.handle('get-image-metadata', async (event, imagePath) => {
+    try {
+      const image = sharp(imagePath, { failOnError: false })
+      const metadata = await image.metadata()
+      return {
+        width: metadata.width,
+        height: metadata.height,
+        channels: metadata.channels,
+        hasAlpha: metadata.hasAlpha,
+        format: metadata.format
+      }
+    } catch (error) {
+      console.error('Error getting image metadata:', error)
       throw error
     }
   })

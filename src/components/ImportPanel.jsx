@@ -2,7 +2,8 @@ import React, { useCallback } from 'react';
 import { Upload, Button, message } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 import useImageStore from '../store/imageStore';
-const { ipcRenderer } = window.require('electron');
+// const { ipcRenderer } = window.require('electron');
+const { ipcRenderer } = window.require ? window.require('electron') : { ipcRenderer: null };
 
 const { Dragger } = Upload;
 

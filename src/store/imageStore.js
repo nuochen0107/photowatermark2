@@ -1,7 +1,8 @@
 import { create } from 'zustand'
-import { ipcRenderer } from 'electron'
-import fs from 'fs'
-import path from 'path'
+// import { ipcRenderer } from 'electron'
+const { ipcRenderer } = window.require ? window.require('electron') : { ipcRenderer: null };
+// import fs from 'fs'
+// import path from 'path'
 
 const useImageStore = create((set, get) => ({
   images: [],
@@ -67,7 +68,10 @@ const useImageStore = create((set, get) => ({
 
       try {
         const preview = await ipcRenderer.invoke('generate-preview', image.path)
-        get().previewCache.set(imageId, `data:image/jpeg;base64,${preview}`)
+        const metadata = await ipcRenderer.invoke('get-image-metadata', image.path)
+        const hasAlpha = metadata.channels === 4 || metadata.hasAlpha
+        const mimeType = hasAlpha ? 'image/png' : 'image/jpeg'
+        get().previewCache.set(imageId, `data:${mimeType};base64,${preview}`)
       } catch (error) {
         console.error(`Error generating preview for ${image.path}:`, error)
         get().previewErrors.add(imageId)
