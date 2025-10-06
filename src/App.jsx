@@ -2,7 +2,7 @@ import React from 'react';
 import { Layout, Typography } from 'antd';
 import ImportPanel from './components/ImportPanel';
 import ImageList from './components/ImageList';
-import PreviewPanel from './components/PreviewPanel';
+import PreviewCanvas from './components/PreviewCanvas';
 import './App.css';
 
 const { Header, Content } = Layout;
@@ -24,7 +24,7 @@ function App() {
               </div>
             </div>
             <div className="right-panel">
-              <PreviewPanel />
+              <PreviewCanvas />
             </div>
           </div>
         </div>
