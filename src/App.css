@@ -140,3 +140,13 @@
   user-select: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
+
+/* Limit the height of the watermark settings area to keep preview large */
+.watermark-settings {
+  flex: 0 0 auto;
+  max-height: 280px;
+  overflow-y: auto;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  padding: 8px 12px;
+}

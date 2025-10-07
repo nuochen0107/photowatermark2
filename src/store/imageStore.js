@@ -1,6 +1,10 @@
 import { create } from 'zustand'
-// import { ipcRenderer } from 'electron'
-const { ipcRenderer } = window.require ? window.require('electron') : { ipcRenderer: null };
+// 使用 preload 脚本中暴露的 ipcRenderer
+const ipcRenderer = window.electron?.ipcRenderer;
+
+if (!ipcRenderer) {
+  console.warn("ipcRenderer not available in imageStore — running in browser dev mode");
+}
 // import fs from 'fs'
 // import path from 'path'
 

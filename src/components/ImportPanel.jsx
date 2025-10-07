@@ -3,7 +3,11 @@ import { Upload, Button, message } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 import useImageStore from '../store/imageStore';
 // const { ipcRenderer } = window.require('electron');
-const { ipcRenderer } = window.require ? window.require('electron') : { ipcRenderer: null };
+const ipcRenderer = window.electron?.ipcRenderer; // Modified to use preload script
+
+if (!ipcRenderer) {
+  console.warn("ipcRenderer not available — running in browser dev mode");
+}
 
 const { Dragger } = Upload;
 
@@ -50,10 +54,14 @@ const ImportPanel = () => {
     }
     
     try {
-      const dirPath = await ipcRenderer.invoke('select-directory');
-      if (dirPath) {
-        // TODO: 读取文件夹中的图片
-        message.info('文件夹导入功能开发中');
+      const imagePaths = await ipcRenderer.invoke('select-directory');
+      if (imagePaths && imagePaths.length > 0) {
+        addImages(imagePaths);
+        message.success(`成功导入 ${imagePaths.length} 张图片`);
+      } else if (imagePaths && imagePaths.length === 0) {
+        message.info('所选文件夹中没有找到支持的图片文件');
+      } else {
+        message.info('未选择文件夹');
       }
     } catch (error) {
       message.error('选择文件夹时出错');

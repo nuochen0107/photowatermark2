@@ -16,6 +16,7 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: '.',
     rollupOptions: {
+      external: ['electron'], // Explicitly externalize electron module
       output: {
         format: 'cjs',
       },
