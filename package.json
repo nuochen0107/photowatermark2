@@ -1,21 +1,37 @@
 {
   "name": "photowatermark2",
   "private": true,
-  "version": "0.0.0",
-  "main": "electron/main.js",
+  "version": "1.0.0",
+  "main": "dist-electron/main.js",
+  "description": "Photo watermark desktop app built with Electron + Vite + React",
+  "author": "Nuochen",
   "scripts": {
     "dev": "vite --port 5173",
     "build": "vite build",
+    "electron:build": "vite build && electron-builder",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "electron:dev": "wait-on tcp:5173 && electronmon .",
     "start": "concurrently -k \"cross-env BROWSER=none npm run dev\" \"npm run electron:dev\""
   },
+  "build": {
+    "appId": "com.nuochen.photowatermark",
+    "productName": "PhotoWatermark",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist",
+      "dist-electron",
+      "package.json"
+    ],
+    "win": {
+      "target": "portable"
+    }
+  },
   "dependencies": {
     "@ant-design/icons": "^5.3.1",
     "antd": "^5.15.1",
-    "electron": "^29.1.1",
-    "electron-builder": "^24.13.3",
     "fabric": "^6.7.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -29,7 +45,9 @@
     "@vitejs/plugin-react": "^4.2.1",
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
+    "electron": "^29.1.1",
     "electronmon": "^2.0.3",
+    "electron-builder": "^24.13.3",
     "eslint": "^8.56.0",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
