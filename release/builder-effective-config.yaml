@@ -1,0 +1,13 @@
+directories:
+  output: release
+  buildResources: build
+appId: com.nuochen.photowatermark
+productName: PhotoWatermark
+files:
+  - filter:
+      - dist
+      - dist-electron
+      - package.json
+win:
+  target: portable
+electronVersion: 29.4.6
