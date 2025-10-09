@@ -111,7 +111,18 @@ const TemplatePanel = () => {
               >
                 <List.Item.Meta
                   title={item.name}
-                  description={`创建时间: ${formatDate(item.createdAt)} | 类型: ${item.watermarkType === 'text' ? '文本水印' : '图片水印'}`}
+                  description={
+                    <div>
+                      <div>创建时间: {formatDate(item.createdAt)}</div>
+                      <div>类型: {item.watermarkType === 'text' ? '文本水印' : '图片水印'}</div>
+                      {item.watermarkType === 'text' && (
+                        <div>内容: "{item.textWatermark.content}" | 字体: {item.textWatermark.fontSize}px {item.textWatermark.fontFamily}</div>
+                      )}
+                      {item.watermarkType === 'image' && item.imageWatermark.path && (
+                        <div>图片: {item.imageWatermark.path.split('/').pop() || item.imageWatermark.path.split('\\').pop()}</div>
+                      )}
+                    </div>
+                  }
                 />
               </List.Item>
             )}

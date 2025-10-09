@@ -38,9 +38,10 @@ const WatermarkRenderer = ({ zoomLevel, position, containerRef, imageRef }) => {
       const scaledHeight = imgRect.height;
       
       // 根据水印类型渲染
-      if (watermarkType === 'text' && textWatermark.content) {
+      // 在template模式下，根据当前的水印设置来决定渲染哪种类型
+      if ((watermarkType === 'text' || watermarkType === 'template') && textWatermark.content) {
         renderTextWatermark(ctx, relX, relY, scaledWidth, scaledHeight);
-      } else if (watermarkType === 'image' && imageWatermark.imageUrl) {
+      } else if ((watermarkType === 'image' || watermarkType === 'template') && imageWatermark.path) {
         renderImageWatermark(ctx, relX, relY, scaledWidth, scaledHeight);
       }
     };
@@ -79,11 +80,11 @@ const WatermarkRenderer = ({ zoomLevel, position, containerRef, imageRef }) => {
     };
     
     const renderImageWatermark = (ctx, x, y, width, height) => {
-      const { imageUrl, opacity, scale, position, rotation, size, preserveAspectRatio } = imageWatermark;
+      const { path, opacity, scale, position, rotation, size, preserveAspectRatio } = imageWatermark;
       
       // 创建图片对象
       const img = new Image();
-      img.src = imageUrl;
+      img.src = path;
       
       img.onload = () => {
         // 设置透明度
