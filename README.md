@@ -5,6 +5,7 @@ PhotoWatermarkCN
 <img width="1487" height="851" alt="image" src="https://github.com/user-attachments/assets/46792e65-e21a-4001-aa63-dd4d8a8d36df" />
 
 🏷️ 发行版
+
 Windows 用户可直接下载可执行文件，无需安装 Node.js 或其他依赖：
 最新版本：Release v1.0.0
 文件名示例：PhotoWatermarkCN 1.0.0.exe
@@ -13,6 +14,7 @@ Windows 用户可直接下载可执行文件，无需安装 Node.js 或其他依
 注意：文件较大，下载前请确保网络稳定。 
 
 🚀 功能特性
+
 🖼️ 图片导入与导出
 支持单张或批量导入（多张图片/整个文件夹）；
 支持 JPEG、PNG（含透明通道）、BMP、TIFF 格式；
