@@ -18,6 +18,34 @@ const useImageStore = create((set, get) => ({
   previewErrors: new Set(),
 
   addImages: async (filePaths) => {
+    // 检查是否为浏览器环境下的File对象数组
+    const isBrowserFileObjects = Array.isArray(filePaths) && filePaths.length > 0 && 
+                                filePaths[0].url && filePaths[0].file;
+    
+    if (isBrowserFileObjects) {
+      // 浏览器环境：处理File对象
+      const newImages = filePaths.map(fileObj => ({
+        id: `browser-${Date.now()}-${fileObj.name}`,
+        path: fileObj.url, // 使用临时URL作为路径
+        name: fileObj.name,
+        isLocalFile: true,
+        browserFile: fileObj.file // 保存原始File对象
+      }));
+
+      set(state => ({
+        images: [...state.images, ...newImages],
+      }));
+
+      // 在浏览器环境中，我们可以直接使用URL作为缩略图和预览
+      newImages.forEach(image => {
+        get().thumbnailCache.set(image.id, image.path);
+        get().previewCache.set(image.id, image.path);
+      });
+      
+      return;
+    }
+
+    // Electron环境：处理文件路径
     if (!ipcRenderer) {
       console.error('ipcRenderer not available');
       return;
@@ -81,6 +109,11 @@ const useImageStore = create((set, get) => ({
 
     set({ selectedImage: image })
     get().previewErrors.delete(imageId)
+
+    // 如果是浏览器环境中的图片，已经有预览了，不需要生成
+    if (image.isLocalFile && image.path.startsWith('blob:')) {
+      return;
+    }
 
     // Generate preview if not cached
     if (!get().previewCache.has(imageId) && !get().loadingPreviews.has(imageId)) {

@@ -31,7 +31,33 @@ const ImportPanel = () => {
 
   const handleSelectFiles = async () => {
     if (!ipcRenderer) {
-      message.warning('文件选择功能需要在Electron环境中使用');
+      // 在浏览器环境中使用HTML5的文件选择API
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.multiple = true;
+      input.accept = '.jpg,.jpeg,.png,.bmp,.tiff';
+      
+      input.onchange = (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+          // 在浏览器环境中，我们只能获取File对象，而不是文件路径
+          // 因此需要创建临时URL或直接处理File对象
+          const fileObjects = files.map(file => ({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            // 创建临时URL以便预览
+            url: URL.createObjectURL(file),
+            // 保存原始File对象以便后续处理
+            file: file
+          }));
+          
+          addImages(fileObjects);
+          message.success(`成功导入 ${files.length} 张图片`);
+        }
+      };
+      
+      input.click();
       return;
     }
     
@@ -49,7 +75,9 @@ const ImportPanel = () => {
 
   const handleSelectFolder = async () => {
     if (!ipcRenderer) {
-      message.warning('文件夹选择功能需要在Electron环境中使用');
+      // 在浏览器环境中，无法直接选择文件夹，但可以使用多文件选择代替
+      message.info('浏览器环境下无法选择文件夹，请使用"选择文件"功能选择多个图片');
+      handleSelectFiles();
       return;
     }
     
