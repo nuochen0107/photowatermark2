@@ -92,36 +92,219 @@ const PreviewPanel = () => {
     setPosition({ x: 0, y: 0 });
   };
 
-  const handleExport = async () => {
+  // 浏览器模式下的下载功能
+  const handleBrowserDownload = async () => {
     try {
       const values = await form.validateFields();
-      const imagesToSave = [
-        {
-          originalPath: selectedImage.path,
-          data: getPreview(selectedImage.id).split(',')[1], // Assuming base64 data
-        },
-      ];
-      const exportOptions = {
-        namingRule: values.namingRule,
-        prefix: values.prefix,
-        suffix: values.suffix,
-      };
-
-      const result = await ipcRenderer.invoke('save-images', imagesToSave, exportOptions);
-
-      if (result.success) {
-        message.success(result.message);
-      } else {
-        message.error(result.message);
-        if (result.errorMessages && result.errorMessages.length > 0) {
-          result.errorMessages.forEach(msg => message.warn(msg));
+      
+      // 创建一个临时canvas来合成带水印的图片
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // 创建图片对象
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      img.onload = async () => {
+        try {
+          // 设置canvas尺寸为原图尺寸
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          
+          // 绘制原图
+          ctx.drawImage(img, 0, 0);
+          
+          // 绘制水印
+          await renderWatermarkOnCanvas(ctx, canvas.width, canvas.height);
+          
+          // 生成文件名
+          const originalName = selectedImage.name || 'image';
+          const nameWithoutExt = originalName.replace(/\.[^/.]+$/, '');
+          const ext = originalName.match(/\.[^/.]+$/) ? originalName.match(/\.[^/.]+$/)[0] : '.png';
+          
+          let fileName;
+          switch (values.namingRule) {
+            case 'prefix':
+              fileName = `${values.prefix || 'wm_'}${originalName}`;
+              break;
+            case 'suffix':
+              fileName = `${nameWithoutExt}${values.suffix || '_watermarked'}${ext}`;
+              break;
+            default:
+              fileName = originalName;
+          }
+          
+          // 转换为blob并下载
+          canvas.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            message.success('图片下载成功！');
+            setIsExportModalVisible(false);
+          }, 'image/png', 1.0);
+          
+        } catch (error) {
+          console.error('下载过程中出错:', error);
+          message.error('下载失败，请重试。');
+          setIsExportModalVisible(false);
         }
-      }
+      };
+      
+      img.onerror = () => {
+        message.error('加载图片失败，无法下载。');
+        setIsExportModalVisible(false);
+      };
+      
+      // 加载图片
+      img.src = preview;
+      
+    } catch (errorInfo) {
+      console.error('下载失败:', errorInfo);
+      message.error('下载失败，请检查设置。');
+      setIsExportModalVisible(false);
+    }
+  };
+
+  const handleExport = async () => {
+    if (!ipcRenderer) {
+      // 浏览器模式下使用下载功能
+      await handleBrowserDownload();
+      return;
+    }
+
+    try {
+      const values = await form.validateFields();
+      
+      // 创建一个临时canvas来合成带水印的图片
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // 创建图片对象
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      img.onload = async () => {
+        try {
+          // 设置canvas尺寸为原图尺寸
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          
+          // 绘制原图
+          ctx.drawImage(img, 0, 0);
+          
+          // 绘制水印
+          await renderWatermarkOnCanvas(ctx, canvas.width, canvas.height);
+          
+          // 转换为base64
+          const dataURL = canvas.toDataURL('image/png', 1.0);
+          const base64Data = dataURL.split(',')[1];
+          
+          const imagesToSave = [
+            {
+              originalPath: selectedImage.path,
+              data: base64Data,
+            },
+          ];
+          
+          const exportOptions = {
+            namingRule: values.namingRule,
+            prefix: values.prefix || 'wm_',
+            suffix: values.suffix || '_watermarked',
+          };
+
+          const result = await ipcRenderer.invoke('save-images', imagesToSave, exportOptions);
+
+          if (result.success) {
+            message.success(result.message);
+          } else {
+            message.error(result.message);
+            if (result.errorMessages && result.errorMessages.length > 0) {
+              result.errorMessages.forEach(msg => message.warn(msg));
+            }
+          }
+        } catch (error) {
+          console.error('导出过程中出错:', error);
+          message.error('导出失败，请重试。');
+        } finally {
+          setIsExportModalVisible(false);
+        }
+      };
+      
+      img.onerror = () => {
+        message.error('加载图片失败，无法导出。');
+        setIsExportModalVisible(false);
+      };
+      
+      // 加载图片
+      img.src = preview;
+      
     } catch (errorInfo) {
       console.error('导出失败:', errorInfo);
       message.error('导出失败，请检查设置。');
-    } finally {
       setIsExportModalVisible(false);
+    }
+  };
+
+  // 在canvas上渲染水印的函数
+  const renderWatermarkOnCanvas = async (ctx, canvasWidth, canvasHeight) => {
+    const { watermarkType, textWatermark, imageWatermark } = useWatermarkStore.getState();
+    
+    if (watermarkType === 'text' && textWatermark.content) {
+      // 渲染文本水印
+      const { content, opacity, fontSize, fontFamily, color, position, rotation } = textWatermark;
+      
+      ctx.save();
+      ctx.globalAlpha = opacity / 100;
+      ctx.font = `${fontSize}px ${fontFamily}`;
+      ctx.fillStyle = color;
+      
+      const posX = canvasWidth * position.x / 100;
+      const posY = canvasHeight * position.y / 100;
+      
+      ctx.translate(posX, posY);
+      ctx.rotate(rotation * Math.PI / 180);
+      ctx.fillText(content, 0, 0);
+      ctx.restore();
+      
+    } else if (watermarkType === 'image' && imageWatermark.path) {
+      // 渲染图片水印
+      return new Promise((resolve) => {
+        const watermarkImg = new Image();
+        watermarkImg.crossOrigin = 'anonymous';
+        
+        watermarkImg.onload = () => {
+          const { opacity, scale, position, rotation, size } = imageWatermark;
+          
+          ctx.save();
+          ctx.globalAlpha = opacity / 100;
+          
+          const posX = canvasWidth * position.x / 100;
+          const posY = canvasHeight * position.y / 100;
+          
+          ctx.translate(posX, posY);
+          ctx.rotate(rotation * Math.PI / 180);
+          
+          const drawWidth = size.width * scale / 100;
+          const drawHeight = size.height * scale / 100;
+          
+          ctx.drawImage(watermarkImg, -drawWidth/2, -drawHeight/2, drawWidth, drawHeight);
+          ctx.restore();
+          resolve();
+        };
+        
+        watermarkImg.onerror = () => {
+          console.warn('水印图片加载失败');
+          resolve();
+        };
+        
+        watermarkImg.src = imageWatermark.path;
+      });
     }
   };
 
@@ -173,7 +356,7 @@ const PreviewPanel = () => {
           disabled={!selectedImage || !preview || error}
           icon={<DownloadOutlined />}
         >
-          导出
+          {ipcRenderer ? '导出' : '下载'}
         </Button>
       </div>
       
@@ -185,11 +368,11 @@ const PreviewPanel = () => {
       )}
       
       <Modal
-        title="导出图片"
+        title={ipcRenderer ? "导出图片" : "下载图片"}
         open={isExportModalVisible}
         onOk={handleExport}
         onCancel={() => setIsExportModalVisible(false)}
-        okText="导出"
+        okText={ipcRenderer ? "导出" : "下载"}
         cancelText="取消"
       >
         <Form
@@ -201,6 +384,13 @@ const PreviewPanel = () => {
             suffix: suffix,
           }}
         >
+          {!ipcRenderer && (
+            <div style={{ marginBottom: 16, padding: 12, backgroundColor: '#f0f8ff', border: '1px solid #d1ecf1', borderRadius: 4 }}>
+              <p style={{ margin: 0, color: '#0c5460' }}>
+                💡 浏览器模式下，图片将直接下载到您的默认下载文件夹中。
+              </p>
+            </div>
+          )}
           <Form.Item label="命名规则" name="namingRule">
             <Radio.Group onChange={(e) => setNamingRule(e.target.value)} value={namingRule}>
               <Radio value="original">保留原文件名</Radio>
@@ -269,6 +459,8 @@ const PreviewPanel = () => {
               position={position} 
               containerRef={containerRef}
               imageRef={imageRef}
+              // 检查是否为浏览器环境中的图片
+              isBrowserImage={selectedImage.isLocalFile && selectedImage.path.startsWith('blob:')}
             />
           </div>
         ) : null}

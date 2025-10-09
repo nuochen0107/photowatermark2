@@ -179,21 +179,18 @@ function createWindow() {
 
   // Handle saving images
   ipcMain.handle('save-images', async (event, imagesToSave, exportOptions) => {
-    const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
-      title: '保存处理后的图片',
-      buttonLabel: '保存',
-      filters: [
-        { name: 'Images', extensions: ['png', 'jpeg', 'jpg'] } // 允许保存为 PNG 或 JPEG
-      ]
+    // 首先让用户选择输出文件夹
+    const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
+      title: '选择输出文件夹',
+      buttonLabel: '选择文件夹',
+      properties: ['openDirectory']
     })
 
-    if (canceled || !filePath) {
+    if (canceled || !filePaths || filePaths.length === 0) {
       return { success: false, message: '保存操作已取消' }
     }
 
-    const outputDir = path.dirname(filePath)
-    const outputExtension = path.extname(filePath).toLowerCase()
-
+    const outputDir = filePaths[0]
     let savedCount = 0
     let errorMessages = []
 
@@ -202,13 +199,15 @@ function createWindow() {
       const imageData = Buffer.from(imageInfo.data, 'base64')
       const originalFileName = path.basename(originalPath, path.extname(originalPath))
       const originalDir = path.dirname(originalPath)
+      const originalExtension = path.extname(originalPath).toLowerCase()
 
-      // Prevent saving to original folder
+      // 防止保存到原文件夹
       if (outputDir === originalDir) {
-        errorMessages.push(`无法保存到原文件夹: ${originalFileName}${outputExtension}`)
+        errorMessages.push(`为防止覆盖原图，无法保存到原文件夹: ${originalFileName}`)
         continue
       }
 
+      // 根据命名规则生成新文件名
       let newFileName = originalFileName
       if (exportOptions.namingRule === 'prefix') {
         newFileName = `${exportOptions.prefix || 'wm_'}${originalFileName}`
@@ -216,9 +215,33 @@ function createWindow() {
         newFileName = `${originalFileName}${exportOptions.suffix || '_watermarked'}`
       }
 
+      // 保持原文件扩展名，如果是PNG数据则使用PNG扩展名
+      let outputExtension = originalExtension
+      if (!outputExtension || outputExtension === '') {
+        outputExtension = '.png' // 默认使用PNG
+      }
+
       const savePath = path.join(outputDir, `${newFileName}${outputExtension}`)
 
       try {
+        // 检查文件是否已存在
+        if (fs.existsSync(savePath)) {
+          const overwrite = await dialog.showMessageBox(mainWindow, {
+            type: 'question',
+            buttons: ['覆盖', '跳过', '取消'],
+            defaultId: 1,
+            message: `文件 "${newFileName}${outputExtension}" 已存在`,
+            detail: '您希望如何处理？'
+          })
+          
+          if (overwrite.response === 2) { // 取消
+            return { success: false, message: '保存操作已取消' }
+          } else if (overwrite.response === 1) { // 跳过
+            continue
+          }
+          // response === 0 表示覆盖，继续执行
+        }
+
         await fs.promises.writeFile(savePath, imageData)
         savedCount++
       } catch (error) {
@@ -228,7 +251,11 @@ function createWindow() {
     }
 
     if (savedCount > 0) {
-      return { success: true, message: `成功保存 ${savedCount} 张图片。`, errorMessages }
+      return { 
+        success: true, 
+        message: `成功保存 ${savedCount} 张图片到 ${outputDir}`, 
+        errorMessages 
+      }
     } else {
       return { success: false, message: '没有图片被保存。', errorMessages }
     }
