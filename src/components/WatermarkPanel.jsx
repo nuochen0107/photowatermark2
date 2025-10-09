@@ -2,6 +2,7 @@ import React from 'react';
 import { Tabs } from 'antd';
 import TextWatermarkPanel from './TextWatermarkPanel';
 import ImageWatermarkPanel from './ImageWatermarkPanel';
+import TemplatePanel from './TemplatePanel';
 import useWatermarkStore from '../store/watermarkStore';
 
 const WatermarkPanel = () => {
@@ -26,6 +27,11 @@ const WatermarkPanel = () => {
             key: 'image',
             label: '图片水印',
             children: <ImageWatermarkPanel />,
+          },
+          {
+            key: 'template',
+            label: '模板管理',
+            children: <TemplatePanel />,
           },
         ]}
       />
