@@ -1,5 +1,5 @@
 import React from 'react';
-import { Input, Slider, Typography, Space, Row, Col, InputNumber, Select } from 'antd';
+import { Input, Slider, Typography, Space, Row, Col, InputNumber, Select, Button } from 'antd';
 import useWatermarkStore from '../store/watermarkStore';
 
 const { Title } = Typography;
@@ -48,6 +48,13 @@ const TextWatermarkPanel = () => {
 
   const handleRotationChange = (value) => {
     updateTextWatermark({ rotation: value });
+  };
+
+  // 预设位置处理函数
+  const handlePresetPosition = (x, y) => {
+    updateTextWatermark({
+      position: { x, y }
+    });
   };
 
   return (
@@ -145,6 +152,41 @@ const TextWatermarkPanel = () => {
               />
             </Col>
           </Row>
+        </div>
+
+        <div>
+          <Title level={5}>预设位置</Title>
+          <div className="preset-positions">
+            <Row gutter={[8, 8]}>
+              <Col span={8}>
+                <Button block onClick={() => handlePresetPosition(10, 10)}>左上角</Button>
+              </Col>
+              <Col span={8}>
+                <Button block onClick={() => handlePresetPosition(50, 10)}>顶部中央</Button>
+              </Col>
+              <Col span={8}>
+                <Button block onClick={() => handlePresetPosition(90, 10)}>右上角</Button>
+              </Col>
+              <Col span={8}>
+                <Button block onClick={() => handlePresetPosition(10, 50)}>左侧中央</Button>
+              </Col>
+              <Col span={8}>
+                <Button block onClick={() => handlePresetPosition(50, 50)}>正中心</Button>
+              </Col>
+              <Col span={8}>
+                <Button block onClick={() => handlePresetPosition(90, 50)}>右侧中央</Button>
+              </Col>
+              <Col span={8}>
+                <Button block onClick={() => handlePresetPosition(10, 90)}>左下角</Button>
+              </Col>
+              <Col span={8}>
+                <Button block onClick={() => handlePresetPosition(50, 90)}>底部中央</Button>
+              </Col>
+              <Col span={8}>
+                <Button block onClick={() => handlePresetPosition(90, 90)}>右下角</Button>
+              </Col>
+            </Row>
+          </div>
         </div>
 
         <div>
